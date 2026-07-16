@@ -3,53 +3,100 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FakeGuard Dashboard</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <meta name="description" content="FakeGuard - AI-powered fake review detection system using TF-IDF, ensemble ML models, and 15+ linguistic features trained on 40,000+ real reviews." />
+    <title>FakeGuard – Fake Review Detection Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      :root { color-scheme: dark; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      body { margin: 0; min-height: 100vh; background: linear-gradient(120deg, #06101d, #10253a); color: #e8f1ff; }
+      :root { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #e7eefc; background: linear-gradient(135deg, #050d1a 0%, #0c1f38 50%, #081428 100%); line-height: 1.6; }
+      body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #050d1a 0%, #0c1f38 50%, #081428 100%); }
       * { box-sizing: border-box; }
-      .app-shell { max-width: 1200px; margin: 0 auto; padding: 32px; }
-      .hero { margin-bottom: 24px; }
-      .eyebrow { text-transform: uppercase; letter-spacing: 0.3em; color: #5dc1ff; font-size: 0.8rem; margin-bottom: 8px; }
-      h1 { font-size: 2.2rem; margin: 0 0 8px; }
-      .subtitle { color: #8ea7c5; max-width: 760px; }
-      .dashboard { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
-      .panel { background: rgba(8, 19, 35, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; box-shadow: 0 14px 38px rgba(0,0,0,0.2); }
-      textarea { width: 100%; border: 1px solid rgba(255,255,255,0.12); padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.06); color: #f7f9ff; margin-top: 8px; }
-      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-      button { border: none; border-radius: 999px; padding: 10px 16px; cursor: pointer; background: #5dc1ff; color: #05101d; font-weight: 700; }
-      button.secondary { background: rgba(255,255,255,0.12); color: #f7f9ff; }
-      .badge { display: inline-block; padding: 8px 12px; border-radius: 999px; font-weight: 700; margin-bottom: 12px; }
-      .badge.fake { background: rgba(255, 92, 92, 0.2); color: #ff8d8d; }
-      .badge.genuine { background: rgba(84, 214, 116, 0.2); color: #94f4b3; }
-      .score { margin: 6px 0; color: #dde8ff; }
-      .hint { color: #86a5c8; }
-      .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
-      .feature-card { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 4px; }
-      .placeholder, .error { color: #95b5d8; }
-      @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } }
+      button, textarea { font: inherit; }
+      .app-shell { max-width: 1200px; margin: 0 auto; padding: 40px 32px; }
+      .hero { margin-bottom: 32px; animation: fadeInDown 0.6s ease-out; }
+      .eyebrow { text-transform: uppercase; letter-spacing: 0.35em; font-size: 0.8rem; font-weight: 700; margin-bottom: 8px; display: inline-block; background: linear-gradient(90deg, #58c0ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      h1 { font-size: 2.4rem; font-weight: 800; margin: 0 0 10px; background: linear-gradient(135deg, #fff, #b8d4f0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 14px; color: #dce7ff; }
+      h3 { font-size: 1rem; font-weight: 600; margin: 0; color: #b0c8e8; }
+      .subtitle { color: #7e9fc0; max-width: 740px; font-size: 0.95rem; }
+      .stats-banner { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; animation: fadeInUp 0.7s ease-out; }
+      .stat-card { background: rgba(12, 25, 48, 0.7); border: 1px solid rgba(88, 192, 255, 0.15); border-radius: 16px; padding: 18px 14px; text-align: center; display: flex; flex-direction: column; gap: 4px; backdrop-filter: blur(12px); transition: all 0.3s ease; position: relative; overflow: hidden; }
+      .stat-card:hover { border-color: rgba(88, 192, 255, 0.35); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(88, 192, 255, 0.1); }
+      .stat-value { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #58c0ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+      .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: #6b8db5; font-weight: 600; }
+      .dashboard { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; animation: fadeInUp 0.8s ease-out; }
+      .panel { background: rgba(8, 18, 35, 0.75); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 20px; padding: 24px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25); backdrop-filter: blur(16px); transition: border-color 0.3s ease; }
+      .panel:hover { border-color: rgba(255, 255, 255, 0.12); }
+      textarea { width: 100%; border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); color: #f0f4ff; margin-top: 8px; resize: vertical; transition: border-color 0.3s ease, box-shadow 0.3s ease; font-size: 0.92rem; }
+      textarea:focus { outline: none; border-color: rgba(88, 192, 255, 0.4); box-shadow: 0 0 0 3px rgba(88, 192, 255, 0.08); }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
+      .sample-links { display: flex; gap: 8px; flex-wrap: wrap; }
+      button { border: none; border-radius: 999px; padding: 11px 20px; cursor: pointer; background: linear-gradient(135deg, #58c0ff, #4090e0); color: #05101d; font-weight: 700; font-size: 0.88rem; transition: all 0.25s ease; }
+      button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(88, 192, 255, 0.3); }
+      button.secondary { background: rgba(255, 255, 255, 0.08); color: #c0d8f0; font-weight: 500; }
+      button.secondary:hover { background: rgba(255, 255, 255, 0.14); box-shadow: none; }
+      button:disabled { opacity: 0.55; cursor: wait; transform: none; }
+      .badge { display: inline-block; padding: 8px 18px; border-radius: 999px; font-weight: 700; font-size: 0.88rem; margin-bottom: 14px; letter-spacing: 0.08em; animation: popIn 0.35s ease-out; }
+      .badge.fake { background: rgba(255, 82, 82, 0.15); color: #ff7b7b; border: 1px solid rgba(255, 82, 82, 0.25); }
+      .badge.genuine { background: rgba(72, 220, 120, 0.15); color: #7df0a5; border: 1px solid rgba(72, 220, 120, 0.25); }
+      .scores-row { display: flex; gap: 24px; flex-wrap: wrap; }
+      .score { margin: 4px 0; color: #c8daf0; font-size: 0.92rem; }
+      .score strong { color: #fff; }
+      .hint { color: #6f92b8; font-size: 0.82rem; margin: 8px 0 0; }
+      .features-heading { margin-top: 18px; margin-bottom: 12px; }
+      .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .feature-card { padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 3px; transition: all 0.25s ease; }
+      .feature-card:hover { background: rgba(255, 255, 255, 0.07); border-color: rgba(88, 192, 255, 0.2); }
+      .feature-name { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b8db5; font-weight: 600; }
+      .feature-value { font-size: 1.05rem; color: #e4eeff; }
+      .app-footer { text-align: center; margin-top: 48px; padding: 20px; color: #4a6a8a; font-size: 0.82rem; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+      .placeholder, .error { color: #6f92b8; font-style: italic; }
+      .error { color: #ff8d8d; }
+      @keyframes fadeInDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes popIn { 0% { opacity: 0; transform: scale(0.85); } 70% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+      @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } .stats-banner { grid-template-columns: repeat(3, 1fr); } .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } h1 { font-size: 1.8rem; } }
+      @media (max-width: 560px) { .stats-banner { grid-template-columns: repeat(2, 1fr); } .feature-grid { grid-template-columns: 1fr 1fr; } .app-shell { padding: 20px 16px; } }
     </style>
   </head>
   <body>
     <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script>
-      const { useState } = React;
+      const { useState, useEffect, createElement: h, Fragment } = React;
+
+      const API_URL = 'https://fakeguard-api.onrender.com';
+
       const starterReviews = [
-        'This coffee maker is absolutely amazing and the best thing ever. You need to buy it right now before it sells out! Must buy!',
-        'I bought this desk lamp last week and it arrived well packaged. The brightness is steady and the build quality feels solid.',
+        'This coffee maker is absolutely amazing and the best thing ever. You need to buy it right now before it sells out! Must buy! Five stars!',
+        'I bought this desk lamp last week and it arrived well packaged. The brightness is steady and the build quality feels solid for the price.',
+        'Worst product ever. Broke after one day. Total waste of money. Do not buy this garbage!',
       ];
 
+      const FEATURE_LABELS = {
+        word_count: 'Word Count', unique_ratio: 'Lexical Diversity', punctuation_ratio: 'Punctuation Ratio',
+        uppercase_ratio: 'Uppercase Ratio', exclamation_count: 'Exclamation Marks', question_count: 'Question Marks',
+        sentiment_balance: 'Sentiment Balance', avg_word_length: 'Avg Word Length', sentence_count: 'Sentence Count',
+        avg_sentence_length: 'Avg Sentence Length', capital_word_ratio: 'Capital Words', repeated_word_ratio: 'Word Repetition',
+        superlative_count: 'Superlatives', review_length: 'Review Length', digit_ratio: 'Digit Ratio',
+      };
+
       function App() {
-        const [review, setReview] = React.useState(starterReviews[0]);
-        const [result, setResult] = React.useState(null);
-        const [loading, setLoading] = React.useState(false);
+        const [review, setReview] = useState(starterReviews[0]);
+        const [result, setResult] = useState(null);
+        const [loading, setLoading] = useState(false);
+        const [stats, setStats] = useState(null);
+
+        useEffect(() => {
+          fetch(API_URL + '/stats').then(r => r.json()).then(setStats).catch(() => {});
+        }, []);
 
         const analyze = async () => {
           setLoading(true);
           try {
-            const response = await fetch('http://127.0.0.1:8000/predict', {
+            const response = await fetch(API_URL + '/predict', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ review }),
@@ -57,83 +104,75 @@
             const data = await response.json();
             setResult(data);
           } catch (error) {
-            setResult({ error: 'Backend unavailable. Start the FastAPI service first.' });
+            setResult({ error: 'Backend unavailable. Please try again later.' });
           } finally {
             setLoading(false);
           }
         };
 
-        return React.createElement(
-          'div',
-          { className: 'app-shell' },
-          React.createElement(
-            'header',
-            { className: 'hero' },
-            React.createElement('p', { className: 'eyebrow' }, 'FakeGuard'),
-            React.createElement('h1', null, 'Detect fake product reviews in real time'),
-            React.createElement('p', { className: 'subtitle' }, 'A full-stack detector driven by TF-IDF text features, linguistic heuristics, and an ensemble of ML models.')
+        const statCards = stats ? [
+          { value: (stats.dataset_size || 40432).toLocaleString() + '+', label: 'Reviews Trained' },
+          { value: stats.f1_score || '—', label: 'F1 Score' },
+          { value: stats.accuracy || '—', label: 'Accuracy' },
+          { value: stats.precision || '—', label: 'Precision' },
+          { value: stats.recall || '—', label: 'Recall' },
+          { value: stats.feature_count || 15, label: 'Features' },
+        ] : null;
+
+        return h('div', { className: 'app-shell' },
+          h('header', { className: 'hero' },
+            h('p', { className: 'eyebrow' }, 'FakeGuard'),
+            h('h1', null, 'Detect fake product reviews in real time'),
+            h('p', { className: 'subtitle' }, 'Trained on 40,000+ real reviews using TF-IDF vectorization, 15+ linguistic features, and a Random Forest + XGBoost + Logistic Regression ensemble.')
           ),
-          React.createElement(
-            'main',
-            { className: 'dashboard' },
-            React.createElement(
-              'section',
-              { className: 'panel' },
-              React.createElement('h2', null, 'Review analyzer'),
-              React.createElement('textarea', {
-                rows: '8',
-                value: review,
-                onChange: (event) => setReview(event.target.value),
-                placeholder: 'Paste a review to inspect...'
-              }),
-              React.createElement(
-                'div',
-                { className: 'actions' },
-                React.createElement('button', { onClick: analyze, disabled: loading }, loading ? 'Analyzing...' : 'Analyze review'),
-                React.createElement(
-                  'div',
-                  null,
-                  starterReviews.map((item, index) => React.createElement(
-                    'button',
-                    { key: item, className: 'secondary', onClick: () => setReview(item) },
-                    'Example ' + (index + 1)
-                  ))
+          statCards && h('section', { className: 'stats-banner' },
+            ...statCards.map((s, i) => h('div', { className: 'stat-card', key: i },
+              h('span', { className: 'stat-value' }, s.value),
+              h('span', { className: 'stat-label' }, s.label)
+            ))
+          ),
+          h('main', { className: 'dashboard' },
+            h('section', { className: 'panel' },
+              h('h2', null, 'Review Analyzer'),
+              h('textarea', { rows: '8', value: review, onChange: (e) => setReview(e.target.value), placeholder: 'Paste a review to inspect...' }),
+              h('div', { className: 'actions' },
+                h('button', { onClick: analyze, disabled: loading }, loading ? 'Analyzing\u2026' : 'Analyze Review'),
+                h('div', { className: 'sample-links' },
+                  ...starterReviews.map((item, i) => h('button', { key: i, className: 'secondary', onClick: () => setReview(item) }, 'Example ' + (i + 1)))
                 )
               )
             ),
-            React.createElement(
-              'section',
-              { className: 'panel' },
-              React.createElement('h2', null, 'Prediction'),
+            h('section', { className: 'panel result-panel' },
+              h('h2', null, 'Prediction'),
               result?.error
-                ? React.createElement('p', { className: 'error' }, result.error)
+                ? h('p', { className: 'error' }, result.error)
                 : result
-                  ? React.createElement(
-                      React.Fragment,
-                      null,
-                      React.createElement('div', { className: 'badge ' + (result.predicted_label === 'fake' ? 'fake' : 'genuine') }, result.predicted_label.toUpperCase()),
-                      React.createElement('p', { className: 'score' }, 'Fake probability: ', React.createElement('strong', null, (result.probability_fake * 100).toFixed(1) + '%')),
-                      React.createElement('p', { className: 'score' }, 'Confidence: ', React.createElement('strong', null, (result.confidence * 100).toFixed(1) + '%')),
-                      React.createElement('p', { className: 'hint' }, 'Model accuracy on held-out test data: ', result.model_accuracy),
-                      React.createElement(
-                        'div',
-                        { className: 'feature-grid' },
-                        Object.entries(result.features || {}).map(([key, value]) => React.createElement(
-                          'div',
-                          { key, className: 'feature-card' },
-                          React.createElement('span', null, key),
-                          React.createElement('strong', null, value)
+                  ? h(Fragment, null,
+                      h('div', { className: 'badge ' + (result.predicted_label === 'fake' ? 'fake' : 'genuine') }, result.predicted_label.toUpperCase()),
+                      h('div', { className: 'scores-row' },
+                        h('p', { className: 'score' }, 'Fake probability: ', h('strong', null, (result.probability_fake * 100).toFixed(1) + '%')),
+                        h('p', { className: 'score' }, 'Confidence: ', h('strong', null, (result.confidence * 100).toFixed(1) + '%'))
+                      ),
+                      h('p', { className: 'hint' }, 'Model accuracy: ' + result.model_accuracy + ' \u00B7 F1: ' + result.f1_score),
+                      h('h3', { className: 'features-heading' }, 'Linguistic Features (' + Object.keys(result.features || {}).length + ')'),
+                      h('div', { className: 'feature-grid' },
+                        ...Object.entries(result.features || {}).map(([key, value]) => h('div', { key, className: 'feature-card' },
+                          h('span', { className: 'feature-name' }, FEATURE_LABELS[key] || key),
+                          h('strong', { className: 'feature-value' }, value)
                         ))
                       )
                     )
-                  : React.createElement('p', { className: 'placeholder' }, 'Submit a review to see a prediction and linguistic indicators.')
+                  : h('p', { className: 'placeholder' }, 'Submit a review to see a prediction and linguistic indicators.')
             )
+          ),
+          h('footer', { className: 'app-footer' },
+            h('p', null, 'FakeGuard \u00B7 TF-IDF + Ensemble ML \u00B7 Built with FastAPI & React')
           )
         );
       }
 
       const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(React.createElement(App));
+      root.render(h(App));
     </script>
   </body>
 </html>
