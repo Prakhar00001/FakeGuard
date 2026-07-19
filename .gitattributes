@@ -1,0 +1,7 @@
+# Tell GitHub to treat these folders as documentation/assets so they don't count toward the language statistics
+api/static/**/* linguist-documentation
+templates/**/* linguist-documentation
+*.html linguist-documentation
+
+# Explicitly ensure your Python files are tracked as the primary source code
+*.py linguist-detectable=true
