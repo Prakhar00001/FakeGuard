@@ -1,18 +1,25 @@
-import re
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Initialize FastAPI instance
-app = FastAPI(title="FakeGuard AI API", version="1.0.0")
+app = FastAPI(title="FakeGuard AI API")
+
+# Enable CORS for Vercel frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ReviewRequest(BaseModel):
     review_text: str
 
-def extract_features_native(text: str) -> dict:
+def extract_features(text: str) -> dict:
     words = text.split()
     word_count = max(len(words), 1)
     char_count = max(len(text), 1)
-    
     uppercase_words = sum(1 for w in words if w.isupper() and len(w) > 1)
     exclamation_count = text.count('!')
     question_count = text.count('?')
@@ -25,27 +32,22 @@ def extract_features_native(text: str) -> dict:
         "avg_word_length": round(char_count / word_count, 2)
     }
 
-# Health Check Endpoints
-@app.get("/health")
 @app.get("/api/health")
-def health_check():
-    return {"status": "ok", "service": "FakeGuard Serverless API"}
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "FakeGuard API"}
 
-# Prediction Endpoints
-@app.post("/predict")
 @app.post("/api/predict")
-def predict_review(payload: ReviewRequest):
+@app.post("/predict")
+def predict(payload: ReviewRequest):
     review_text = payload.review_text.strip()
     if not review_text:
         raise HTTPException(status_code=400, detail="Review text cannot be empty.")
 
-    # Safe feature extraction
-    features_dict = extract_features_native(review_text)
+    features_dict = extract_features(review_text)
 
-    # Compute probability score
     excl = features_dict.get('exclamation_ratio', 0)
     caps = features_dict.get('uppercase_ratio', 0)
-    
     fake_prob = min(0.99, max(0.02, (excl * 3.5) + (caps * 2.5) + 0.12))
     
     buzzwords = ["AMAZING", "MUST BUY", "BEST EVER", "100%", "PERFECT", "SCAM", "GARBAGE", "ZERO STARS"]
