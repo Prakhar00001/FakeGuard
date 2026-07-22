@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Dynamically add the current directory and its app subfolder to sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "app"))
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -9,7 +16,11 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, f1_score, accuracy_score
 
-from app.feature_engineering import ReviewFeatureExtractor
+# Try importing from app or directly from directory
+try:
+    from app.feature_engineering import ReviewFeatureExtractor
+except ModuleNotFoundError:
+    from feature_engineering import ReviewFeatureExtractor
 
 def train_and_eval():
     data_path = "backend/data/fake_reviews_40k.csv"
