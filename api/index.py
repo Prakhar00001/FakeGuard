@@ -2,7 +2,7 @@ import re
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-# Initialize FastAPI instance (Vercel automatically detects 'app')
+# Initialize FastAPI instance
 app = FastAPI(title="FakeGuard AI API", version="1.0.0")
 
 class ReviewRequest(BaseModel):
@@ -25,27 +25,29 @@ def extract_features_native(text: str) -> dict:
         "avg_word_length": round(char_count / word_count, 2)
     }
 
+# Health Check Endpoints
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "FakeGuard Serverless API"}
 
+# Prediction Endpoints
+@app.post("/predict")
 @app.post("/api/predict")
 def predict_review(payload: ReviewRequest):
     review_text = payload.review_text.strip()
     if not review_text:
         raise HTTPException(status_code=400, detail="Review text cannot be empty.")
 
-    # Extract 15+ behavioral and linguistic features safely
+    # Safe feature extraction
     features_dict = extract_features_native(review_text)
 
     # Compute probability score
     excl = features_dict.get('exclamation_ratio', 0)
     caps = features_dict.get('uppercase_ratio', 0)
     
-    # Feature-weighted heuristic scoring
     fake_prob = min(0.99, max(0.02, (excl * 3.5) + (caps * 2.5) + 0.12))
     
-    # Check for promotional buzzwords
     buzzwords = ["AMAZING", "MUST BUY", "BEST EVER", "100%", "PERFECT", "SCAM", "GARBAGE", "ZERO STARS"]
     if any(word in review_text.upper() for word in buzzwords):
         fake_prob = min(0.98, fake_prob + 0.38)
