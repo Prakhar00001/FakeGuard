@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 
-// Use relative API path so it works seamlessly locally & on Vercel
+// Relative API endpoint works seamlessly locally and on live Vercel
 const API_ENDPOINT = '/api/predict';
+
+const EXAMPLES = [
+  "AMAZING PRODUCT MUST BUY NOW PERFECT QUALITY 100% BEST EVER!",
+  "The product arrived on time and works as expected. Build quality is decent for the price.",
+  "DO NOT BUY THIS! absolute garbage scam seller zero stars completely broken on arrival!!!"
+];
 
 export default function App() {
   const [review, setReview] = useState('');
@@ -9,9 +15,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleAnalyze = async (e) => {
-    e.preventDefault();
-    if (!review.trim()) return;
+  const analyzeReviewText = async (textToAnalyze) => {
+    if (!textToAnalyze.trim()) return;
 
     setLoading(true);
     setError(null);
@@ -21,7 +26,7 @@ export default function App() {
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review_text: review }),
+        body: JSON.stringify({ review_text: textToAnalyze }),
       });
 
       if (!response.ok) {
@@ -32,173 +37,225 @@ export default function App() {
       setResult(data);
     } catch (err) {
       console.error('API Error:', err);
-      setError('Failed to analyze review. Ensure backend API is active.');
+      setError('Backend unavailable. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    analyzeReviewText(review);
+  };
+
+  const handleExampleClick = (exampleText) => {
+    setReview(exampleText);
+    analyzeReviewText(exampleText);
+  };
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>🛡️ FakeGuard</h1>
+        <h1 style={styles.title}>Detect fake product reviews in real time</h1>
         <p style={styles.subtitle}>
-          Full-Stack Fake Review Detection Powered by Stacked Ensemble ML
+          Trained on 40,000+ real reviews using <strong>TF-IDF vectorization</strong>, <strong>15+ linguistic features</strong>, and a <strong>Random Forest + XGBoost + Logistic Regression ensemble</strong>.
         </p>
       </header>
 
-      <main style={styles.main}>
-        <form onSubmit={handleAnalyze} style={styles.form}>
-          <label style={styles.label}>Paste Review Text:</label>
-          <textarea
-            rows="5"
-            style={styles.textarea}
-            placeholder="e.g., AMAZING PRODUCT MUST BUY NOW 100% BEST EVER!!!"
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={loading || !review.trim()}
-            style={loading ? { ...styles.button, ...styles.buttonDisabled } : styles.button}
-          >
-            {loading ? 'Analyzing Review...' : 'Analyze Review'}
-          </button>
-        </form>
-
-        {error && <div style={styles.errorBox}>{error}</div>}
-
-        {result && (
-          <div style={styles.resultCard}>
-            <div
-              style={{
-                ...styles.badge,
-                backgroundColor: result.is_fake ? '#fee2e2' : '#dcfce7',
-                color: result.is_fake ? '#991b1b' : '#166534',
-              }}
-            >
-              {result.is_fake ? '🚨 Fake Review Detected' : '✅ Genuine Review'}
-            </div>
-
-            <div style={styles.metricGrid}>
-              <div style={styles.metricItem}>
-                <span style={styles.metricLabel}>Classification Confidence</span>
-                <span style={styles.metricValue}>{result.confidence}</span>
-              </div>
-              <div style={styles.metricItem}>
-                <span style={styles.metricLabel}>Fake Probability Score</span>
-                <span style={styles.metricValue}>{result.fake_probability}</span>
-              </div>
-            </div>
-
-            <h3 style={styles.featureHeader}>15+ Behavioral & Linguistic Breakdown</h3>
-            <div style={styles.featureGrid}>
-              {Object.entries(result.linguistic_features || {}).map(([key, value]) => (
-                <div key={key} style={styles.featurePill}>
-                  <span style={styles.featureKey}>{key.replace('_', ' ')}:</span>{' '}
-                  <strong style={styles.featureVal}>
-                    {typeof value === 'number' ? value.toFixed(3) : value}
-                  </strong>
-                </div>
+      <main style={styles.mainGrid}>
+        {/* Left Column: Input Form */}
+        <div style={styles.card}>
+          <h2 style={styles.cardHeader}>Review Analyzer</h2>
+          <form onSubmit={handleFormSubmit} style={styles.form}>
+            <textarea
+              rows="7"
+              style={styles.textarea}
+              placeholder="Paste review text here..."
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+            />
+            <div style={styles.buttonRow}>
+              <button
+                type="submit"
+                disabled={loading || !review.trim()}
+                style={loading ? { ...styles.button, ...styles.buttonDisabled } : styles.button}
+              >
+                {loading ? 'Analyzing...' : 'Analyze Review'}
+              </button>
+              {EXAMPLES.map((ex, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  style={styles.exampleBtn}
+                  onClick={() => handleExampleClick(ex)}
+                >
+                  Example {idx + 1}
+                </button>
               ))}
             </div>
-          </div>
-        )}
+          </form>
+        </div>
+
+        {/* Right Column: Prediction Results */}
+        <div style={styles.card}>
+          <h2 style={styles.cardHeader}>Prediction</h2>
+          
+          {error && <div style={styles.errorText}>{error}</div>}
+
+          {!result && !error && (
+            <p style={styles.placeholderText}>
+              Enter a review on the left or select an example to view real-time classification metrics.
+            </p>
+          )}
+
+          {result && (
+            <div>
+              <div
+                style={{
+                  ...styles.badge,
+                  backgroundColor: result.is_fake ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
+                  color: result.is_fake ? '#f87171' : '#4ade80',
+                  border: `1px solid ${result.is_fake ? '#ef4444' : '#22c55e'}`,
+                }}
+              >
+                {result.is_fake ? '🚨 Fake Review Detected' : '✅ Genuine Review'}
+              </div>
+
+              <div style={styles.metricGrid}>
+                <div style={styles.metricItem}>
+                  <span style={styles.metricLabel}>Classification Confidence</span>
+                  <span style={styles.metricValue}>{result.confidence}</span>
+                </div>
+                <div style={styles.metricItem}>
+                  <span style={styles.metricLabel}>Fake Probability Score</span>
+                  <span style={styles.metricValue}>{result.fake_probability}</span>
+                </div>
+              </div>
+
+              <h4 style={styles.featureHeader}>15+ Linguistic Features Breakdown</h4>
+              <div style={styles.featureGrid}>
+                {Object.entries(result.linguistic_features || {}).map(([key, value]) => (
+                  <div key={key} style={styles.featurePill}>
+                    <span>{key.replace('_', ' ')}:</span>{' '}
+                    <strong>{typeof value === 'number' ? value.toFixed(3) : value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
 }
 
-// Inline Styles for Clean Dashboard UI
 const styles = {
   container: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    maxWidth: '850px',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    maxWidth: '1200px',
     margin: '0 auto',
-    padding: '2rem 1rem',
-    color: '#1f2937',
+    padding: '3rem 1.5rem',
+    color: '#f3f4f6',
+    backgroundColor: '#0f172a',
+    minHeight: '100vh',
+    boxSizing: 'border-box',
   },
   header: {
-    textAlign: 'center',
-    marginBottom: '2rem',
+    marginBottom: '2.5rem',
   },
   title: {
-    fontSize: '2.25rem',
+    fontSize: '2.5rem',
     fontWeight: '800',
-    color: '#111827',
-    margin: '0 0 0.5rem 0',
+    color: '#ffffff',
+    margin: '0 0 0.75rem 0',
   },
   subtitle: {
-    fontSize: '1rem',
-    color: '#4b5563',
+    fontSize: '1.05rem',
+    color: '#94a3b8',
     margin: 0,
+    maxWidth: '800px',
+    lineHeight: '1.6',
   },
-  main: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
+  mainGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+    gap: '2rem',
+  },
+  card: {
+    backgroundColor: '#1e293b',
+    padding: '1.75rem',
+    borderRadius: '16px',
+    border: '1px solid #334155',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+  },
+  cardHeader: {
+    fontSize: '1.35rem',
+    fontWeight: '700',
+    color: '#f8fafc',
+    margin: '0 0 1.25rem 0',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
-    backgroundColor: '#ffffff',
-    padding: '1.5rem',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    border: '1px solid #e5e7eb',
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: '0.95rem',
-    color: '#374151',
+    gap: '1rem',
   },
   textarea: {
     width: '100%',
-    padding: '0.75rem',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: '1rem',
+    padding: '1rem',
+    borderRadius: '12px',
+    border: '1px solid #475569',
+    backgroundColor: '#0f172a',
+    color: '#f8fafc',
+    fontSize: '0.95rem',
     boxSizing: 'border-box',
     outline: 'none',
     resize: 'vertical',
   },
+  buttonRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+  },
   button: {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#2563eb',
-    color: '#ffffff',
+    padding: '0.75rem 1.25rem',
+    backgroundColor: '#38bdf8',
+    color: '#0f172a',
     border: 'none',
     borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: '600',
+    fontSize: '0.95rem',
+    fontWeight: '700',
     cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
   },
   buttonDisabled: {
-    backgroundColor: '#93c5fd',
+    backgroundColor: '#64748b',
     cursor: 'not-allowed',
   },
-  errorBox: {
-    padding: '1rem',
-    backgroundColor: '#fef2f2',
-    color: '#991b1b',
-    border: '1px solid #fecaca',
+  exampleBtn: {
+    padding: '0.75rem 1rem',
+    backgroundColor: '#334155',
+    color: '#cbd5e1',
+    border: '1px solid #475569',
     borderRadius: '8px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
   },
-  resultCard: {
-    backgroundColor: '#ffffff',
-    padding: '1.5rem',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e5e7eb',
+  errorText: {
+    color: '#f87171',
+    fontSize: '0.95rem',
+    fontStyle: 'italic',
+  },
+  placeholderText: {
+    color: '#64748b',
+    fontSize: '0.95rem',
   },
   badge: {
     display: 'inline-block',
     padding: '0.5rem 1rem',
-    borderRadius: '9999px',
+    borderRadius: '8px',
     fontWeight: '700',
     fontSize: '1rem',
-    marginBottom: '1rem',
+    marginBottom: '1.25rem',
   },
   metricGrid: {
     display: 'grid',
@@ -210,43 +267,37 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     padding: '1rem',
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#0f172a',
     borderRadius: '8px',
-    border: '1px solid #f3f4f6',
+    border: '1px solid #334155',
   },
   metricLabel: {
-    fontSize: '0.85rem',
-    color: '#6b7280',
+    fontSize: '0.75rem',
+    color: '#94a3b8',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',
   },
   metricValue: {
-    fontSize: '1.5rem',
+    fontSize: '1.35rem',
     fontWeight: '700',
-    color: '#111827',
+    color: '#f8fafc',
+    marginTop: '0.25rem',
   },
   featureHeader: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
+    fontSize: '0.95rem',
+    color: '#cbd5e1',
     marginBottom: '0.75rem',
-    color: '#374151',
   },
   featureGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
     gap: '0.5rem',
   },
   featurePill: {
-    padding: '0.5rem 0.75rem',
-    backgroundColor: '#f3f4f6',
+    padding: '0.4rem 0.6rem',
+    backgroundColor: '#0f172a',
     borderRadius: '6px',
-    fontSize: '0.85rem',
-    color: '#4b5563',
-  },
-  featureKey: {
-    textTransform: 'capitalize',
-  },
-  featureVal: {
-    color: '#111827',
+    fontSize: '0.75rem',
+    color: '#94a3b8',
+    border: '1px solid #1e293b',
   },
 };

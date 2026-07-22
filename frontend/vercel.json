@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://your-fakeguard-backend.onrender.com/:path*"
-    }
-  ]
-}
