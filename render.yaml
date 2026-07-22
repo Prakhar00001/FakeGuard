@@ -8,15 +8,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
-
-  - type: web
-    name: fakeguard-ui
-    env: static
-    plan: free
-    buildCommand: "cd frontend && npm install && npm run build"
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value:http://127.0.0.1:8000
-        
-         
