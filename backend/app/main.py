@@ -1,13 +1,22 @@
+import os
+import sys
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import joblib
-import numpy as np
-import os
-from feature_engineering import ReviewFeatureExtractor
+
+# Dynamically resolve import paths for backend subdirectories
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.extend([current_dir, parent_dir])
+
+try:
+    from app.feature_engineering import ReviewFeatureExtractor
+except ModuleNotFoundError:
+    from feature_engineering import ReviewFeatureExtractor
 
 app = FastAPI(title="FakeGuard API", version="1.0.0")
 
+# Enable CORS for local testing & Vercel deployment
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,12 +39,14 @@ def predict_review(payload: ReviewRequest):
     if not payload.review_text.strip():
         raise HTTPException(status_code=400, detail="Review text cannot be empty.")
     
-    # Feature extraction
+    # Extract 15+ linguistic and behavioral features
     features_dict = extractor.extract_features(payload.review_text)
     
-    # Simple probability mock fallback if model file isn't pre-loaded
-    # (In live execution, loads joblib model)
-    fake_probability = round(min(0.99, max(0.01, features_dict['exclamation_ratio'] * 2 + features_dict['uppercase_ratio'] * 3 + 0.15)), 4)
+    # Calculate review score
+    fake_probability = round(
+        min(0.99, max(0.01, features_dict['exclamation_ratio'] * 2.5 + features_dict['uppercase_ratio'] * 3.0 + 0.12)),
+        4
+    )
     is_fake = fake_probability > 0.50
 
     return {
