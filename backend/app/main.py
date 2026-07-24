@@ -11,6 +11,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CRITICAL: CORS Middleware must be added first before any routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,7 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Support both /predict and /api/predict to prevent routing/CORS mismatches
 @app.post("/api/predict", response_model=PredictionResponse)
+@app.post("/predict", response_model=PredictionResponse)
 async def predict(request: ReviewRequest):
     try:
         if not request.text or not request.text.strip():
@@ -29,6 +32,7 @@ async def predict(request: ReviewRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health")
+@app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "FakeGuard API"}
 
