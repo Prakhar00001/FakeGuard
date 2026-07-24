@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
 
-// Relative path routes directly to Vercel Serverless Function (/api/predict)
+// Relative path routes directly to backend API (/api/predict)
 const API_ENDPOINT = '/api/predict';
 
 const EXAMPLES = [
@@ -42,7 +42,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ review_text: text }),
+        body: JSON.stringify({ text }),
       });
 
       if (!response.ok) {
@@ -63,6 +63,8 @@ function App() {
     setReviewText(exampleText);
     handleAnalyze(exampleText);
   };
+
+  const isFake = result ? result.prediction === 'Fake' : false;
 
   return (
     <div className="app-container">
@@ -120,29 +122,24 @@ function App() {
 
           {result && (
             <div className="result-container">
-              <div className={`badge ${result.is_fake ? 'badge-fake' : 'badge-genuine'}`}>
-                {result.is_fake ? 'FAKE REVIEW DETECTED' : 'GENUINE REVIEW'}
+              <div className={`badge ${isFake ? 'badge-fake' : 'badge-genuine'}`}>
+                {isFake ? 'FAKE REVIEW DETECTED' : 'GENUINE REVIEW'}
               </div>
 
               <div className="metric">
                 <span className="metric-label">Fake Probability:</span>
-                <span className="metric-value">{(result.fake_probability * 100).toFixed(1)}%</span>
+                <span className="metric-value">{(result.probability_fake * 100).toFixed(1)}%</span>
               </div>
 
               <div className="metric">
                 <span className="metric-label">Confidence:</span>
-                <span className="metric-value">{result.confidence}</span>
+                <span className="metric-value">{(result.confidence * 100).toFixed(1)}%</span>
               </div>
 
-              {result.linguistic_features && (
+              {result.explanation && (
                 <div className="features-breakdown">
-                  <h4>Extracted Linguistic Features</h4>
-                  <ul>
-                    <li>Word Count: <strong>{result.linguistic_features.word_count}</strong></li>
-                    <li>Uppercase Ratio: <strong>{(result.linguistic_features.uppercase_ratio * 100).toFixed(1)}%</strong></li>
-                    <li>Exclamation Ratio: <strong>{(result.linguistic_features.exclamation_ratio * 100).toFixed(1)}%</strong></li>
-                    <li>Avg Word Length: <strong>{result.linguistic_features.avg_word_length}</strong></li>
-                  </ul>
+                  <h4>Analysis Explanation</h4>
+                  <p>{result.explanation}</p>
                 </div>
               )}
             </div>
