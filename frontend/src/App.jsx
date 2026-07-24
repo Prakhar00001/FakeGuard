@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
+import './styles.css';
 
 const API_PREDICT = '/api/predict';
 const API_STATS = '/api/stats';
