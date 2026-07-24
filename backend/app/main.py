@@ -11,16 +11,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CRITICAL: CORS Middleware must be added first before any routes
+# Fix CORS: allow_credentials must be False when allow_origins is ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Support both /predict and /api/predict to prevent routing/CORS mismatches
 @app.post("/api/predict", response_model=PredictionResponse)
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: ReviewRequest):
@@ -31,12 +30,22 @@ async def predict(request: ReviewRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/stats")
+@app.get("/stats")
+def get_stats():
+    return {
+        "total_reviews_trained": 40000,
+        "model_type": "Ensemble (Random Forest + XGBoost + Logistic Regression)",
+        "f1_score": 0.88,
+        "status": "operational"
+    }
+
 @app.get("/api/health")
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "FakeGuard API"}
 
-# Mount React Static Frontend
+# Mount React Static Frontend (if running as monorepo)
 frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")

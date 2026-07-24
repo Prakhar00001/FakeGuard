@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import './App.css';
 
 // Relative path routes directly to backend API (/api/predict)
-const API_ENDPOINT = '/api/predict';
+// Change this at the top of frontend/src/App.jsx
+const API_ENDPOINT = 'https://fakeguard-api.onrender.com/predict';
 
 const EXAMPLES = [
   {
