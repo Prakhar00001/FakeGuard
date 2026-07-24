@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+import traceback
 from .schemas import ReviewRequest, PredictionResponse
 from .model_utils import predict_fake_review
 
@@ -11,7 +12,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Fix CORS: allow_credentials must be False when allow_origins is ["*"]
+# CORS Middleware configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,8 +27,12 @@ async def predict(request: ReviewRequest):
     try:
         if not request.text or not request.text.strip():
             raise HTTPException(status_code=400, detail="Review text cannot be empty.")
-        return predict_fake_review(request.text)
+        
+        result = predict_fake_review(request.text)
+        return result
     except Exception as e:
+        error_trace = traceback.format_exc()
+        print("CRITICAL PREDICTION ERROR:\n", error_trace)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/stats")
@@ -45,7 +50,7 @@ def get_stats():
 def health_check():
     return {"status": "healthy", "service": "FakeGuard API"}
 
-# Mount React Static Frontend (if running as monorepo)
+# Mount React Static Frontend
 frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="static")
