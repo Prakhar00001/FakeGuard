@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Relative path routes directly to backend API (/api/predict)
-// Change this at the top of frontend/src/App.jsx
-const API_ENDPOINT = 'https://fakeguard-api.onrender.com/predict';
+const API_PREDICT = '/api/predict';
+const API_STATS = '/api/stats';
 
 const EXAMPLES = [
   {
@@ -25,6 +24,14 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    fetch(API_STATS)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(err => console.log('Stats fetch failed:', err));
+  }, []);
 
   const handleAnalyze = async (textToAnalyze) => {
     const text = textToAnalyze || reviewText;
@@ -38,11 +45,9 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch(API_ENDPOINT, {
+      const response = await fetch(API_PREDICT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
 
@@ -73,7 +78,7 @@ function App() {
         <h1 className="logo">FAKEGUARD</h1>
         <h2 className="title">Detect fake product reviews in real time</h2>
         <p className="subtitle">
-          Trained on 40,000+ real reviews using TF-IDF vectorization, 15+ linguistic features, and a Random Forest + XGBoost + Logistic Regression ensemble.
+          Trained on {stats ? stats.total_reviews_trained.toLocaleString() : '40,000+'} real reviews using TF-IDF vectorization, linguistic features, and an ML ensemble.
         </p>
       </header>
 
