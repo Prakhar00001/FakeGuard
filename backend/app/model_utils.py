@@ -44,11 +44,13 @@ def predict_fake_review(text: str):
     if model is None or vectorizer is None:
         text_lower = text.lower()
         is_fake = any(w in text_lower for w in ["scam", "worst", "never buy", "garbage", "cheat", "fake", "terrible", "horrible", "100% perfect", "best product ever"])
-        prob = 0.88 if is_fake else 0.18
+        prob_fake = 0.88 if is_fake else 0.18
+        prob_real = 1.0 - prob_fake
         return {
             "prediction": "Fake" if is_fake else "Genuine",
-            "probability_fake": prob,
-            "confidence": prob if is_fake else (1 - prob),
+            "probability_fake": prob_fake,
+            "probability_real": prob_real,
+            "confidence": prob_fake if is_fake else prob_real,
             "explanation": "Evaluated via linguistic heuristic analysis (model checkpoint fallback)."
         }
 
@@ -69,6 +71,7 @@ def predict_fake_review(text: str):
             fake_index = 1 if len(probs) > 1 else 0
 
         probability_fake = float(probs[fake_index])
+        probability_real = float(1.0 - probability_fake)
         is_fake = probability_fake >= 0.50
         prediction = "Fake" if is_fake else "Genuine"
         confidence = float(max(probs))
@@ -81,6 +84,7 @@ def predict_fake_review(text: str):
         return {
             "prediction": prediction,
             "probability_fake": probability_fake,
+            "probability_real": probability_real,
             "confidence": confidence,
             "explanation": explanation
         }
@@ -88,6 +92,7 @@ def predict_fake_review(text: str):
         return {
             "prediction": "Genuine",
             "probability_fake": 0.20,
+            "probability_real": 0.80,
             "confidence": 0.80,
             "explanation": "Processed successfully via safe fallback handler."
         }
